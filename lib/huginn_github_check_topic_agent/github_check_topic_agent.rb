@@ -9,6 +9,8 @@ module Agents
       <<-MD
       The Github Check Topic agent agent checks if topics are present and creates an event if they are missing.
 
+      `owner` is the owner to check.
+
       `wanted_topic` is the wanted topics list.
 
       `regex_filter_name` is used to filter repositories with regex ( for example `^huginn_`).
@@ -37,12 +39,14 @@ module Agents
         'debug' => 'false',
         'expected_receive_period_in_days' => '2',
         'token' => '',
+        'owner' => '',
         'wanted_topic' => '',
         'regex_filter_name' => ''
       }
     end
 
     form_configurable :token, type: :string
+    form_configurable :owner, type: :string
     form_configurable :regex_filter_name, type: :string
     form_configurable :expected_receive_period_in_days, type: :string
     form_configurable :debug, type: :boolean
@@ -51,6 +55,10 @@ module Agents
     def validate_options
       unless options['token'].present?
         errors.add(:base, "token is a required field")
+      end
+
+      unless options['owner'].present?
+        errors.add(:base, "owner is a required field")
       end
 
       unless options['wanted_topic'].present?
@@ -137,7 +145,7 @@ module Agents
     end    
     
     def fetch
-      uri = URI.parse("https://api.github.com/users/hihouhou/repos?per_page=100")
+      uri = URI.parse("https://api.github.com/users/#{interpolated['owner']}/repos?per_page=100")
       request = Net::HTTP::Get.new(uri)
       request["Authorization"] = interpolated['token']
       request["Accept"] = "application/vnd.github.mercy-preview+json"
